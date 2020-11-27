@@ -26,20 +26,21 @@ pub mod lib {
         let mut output = Vec::new();
         let chars = ascii.chars().collect::<Vec<_>>();
         for slice in chars.chunks_exact(4) {
-            output.push((slice[0] as u32).rotate_left(24)
-                    + (slice[1] as u32).rotate_left(16)
-                    + (slice[2] as u32).rotate_left(8)
-                    + (slice[3] as u32));
+        // stack word into u32 in rev byte order
+            output.push((slice[0] as u32)
+                    + (slice[1] as u32).rotate_left(8)
+                    + (slice[2] as u32).rotate_left(16)
+                    + (slice[3] as u32).rotate_left(24));
         }
         let rem = chars.chunks_exact(4).remainder();
         match rem.len() {
-            1 => output.push((rem[0] as u32).rotate_left(24) + 0x00800000),
-            2 => output.push((rem[0] as u32).rotate_left(24)
-                        + (rem[1] as u32).rotate_left(16) + 0x00008000),
-            3 => output.push((rem[0] as u32).rotate_left(24)
-                        + (rem[1] as u32).rotate_left(16)
-                        + (rem[2] as u32).rotate_left(8) + 0x00000080),
-            _ => output.push(0x80000000),
+            1 => output.push((rem[0] as u32) + 0x00008000),
+            2 => output.push((rem[0] as u32)
+                        + (rem[1] as u32).rotate_left(8) + 0x00800000),
+            3 => output.push((rem[0] as u32)
+                        + (rem[1] as u32).rotate_left(8)
+                        + (rem[2] as u32).rotate_left(16) + 0x80000000),
+            _ => output.push(0x00000080),
         }
         
         let amount_of_padding = ((16 - (output.len() % 16) as isize) - 2).rem_euclid(16);
@@ -47,27 +48,28 @@ pub mod lib {
             output.push(0);
         }
         let length = (chars.len() * 8) as u64;
-        // length is LE --- mentioned in RFC
-        output.push(u32::from_le_bytes((length as u32).to_be_bytes()));
-        output.push(u32::from_le_bytes(((length >> 32) as u32).to_be_bytes()));
-        // ENTIRE INPUT STREAM---including THE LENGTH, is read in low-byte-to-high-byte order, which is now...backwards? I guess?
-        // this particular fact about the double switcheroo on the length is NOT MENTIONED IN RFC (not just confusingly worded, but outright unmentioned)
-        // note: this gives the correct output for wiki tests, and for "dagoth ur was a hotep"
-        let fin = output.iter().map(|x| u32::from_le_bytes(x.to_be_bytes())).collect();
-        fin
+        // push length as usual --- input as LE and length as BE, as here, is isomorphic to the way MD5 does it,
+        // which is to store input in straight byte order and length in rev byte order, and then read everything in
+        // rev byte order
+        output.push(length as u32);
+        output.push((length >> 32) as u32);
+        output
     }
 
     pub fn md5_hash(data: Vec<u32>) -> [u32; 4] {
+        // set up registers
         let mut a0: u32 = 0x67452301;
         let mut b0: u32 = 0xefcdab89;
         let mut c0: u32 = 0x98badcfe;
         let mut d0: u32 = 0x10325476;
         
         for chunk in data.chunks(16) {
+            // copy registers to work with
             let mut a = a0;
             let mut b = b0;
             let mut c = c0;
             let mut d = d0;
+            // rounds---each 16 i's is 1 round
             for i in 0..64 {
                 let (mut f, g);
                 if i <= 15 {
@@ -89,12 +91,13 @@ pub mod lib {
                 c = b;
                 b = b.wrapping_add(f.rotate_left(S[i]));
             }
+            // add result to output registers
             a0 = a0.wrapping_add(a);
             b0 = b0.wrapping_add(b);
             c0 = c0.wrapping_add(c);
             d0 = d0.wrapping_add(d);
         }
-        // output is LE --- this is mentioned in RFC
+        // output is LE
         [u32::from_le_bytes(a0.to_be_bytes()), u32::from_le_bytes(b0.to_be_bytes()), u32::from_le_bytes(c0.to_be_bytes()), u32::from_le_bytes(d0.to_be_bytes())]
     }
 }
