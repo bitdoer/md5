@@ -100,7 +100,7 @@ fn md5_hash(data: Vec<u32>) -> [u32; 4] {
 fn main() {
     let input = std::env::args().collect::<Vec<String>>();
     for i in md5_hash(convert_and_pad(&input[1])).iter() {
-        print!("{:x}", i);
+        print!("{:01$x}", i, 8);
     }
     println!("");
 }
