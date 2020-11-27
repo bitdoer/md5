@@ -4,7 +4,7 @@ A simple MD5 hasher to be run from the command line, written in Rust.
 
 ## Installation
 
-Using Cargo, build the project with `cargo build --release`; the executable will be in /target/release, and can be moved to a relevant place/added to PATH/etc.
+Using Cargo, build the project with `cargo build --release`; the binary will be in md5/target/release, and can be moved to a relevant place/added to PATH/etc.
 
 ## Usage
 
