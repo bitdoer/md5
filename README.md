@@ -1,10 +1,10 @@
 # Command-Line MD5
 
-A simple MD5 hasher to be run from the command line.
+A simple MD5 hasher to be run from the command line, written in Rust.
 
 ## Installation
 
-Using cargo, build the project with `cargo build --release`; the executable will be in /target/release, and can be moved to a relevant place/added to PATH/etc.
+Using Cargo, build the project with `cargo build --release`; the executable will be in /target/release, and can be moved to a relevant place/added to PATH/etc.
 
 ## Usage
 
