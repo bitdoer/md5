@@ -5,5 +5,5 @@ fn main() {
     for i in md5_hash(convert_and_pad(&input[1])).iter() {
         print!("{:01$x}", i, 8);
     }
-    println!("");
+    println!();
 }

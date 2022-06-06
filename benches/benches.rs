@@ -1,11 +1,13 @@
 use md5::lib::{convert_and_pad, md5_hash};
-use rand::{thread_rng, Rng};
 use rand::distributions::Alphanumeric;
+use rand::{thread_rng, Rng};
 
 fn random_string(n: usize) -> String {
-    thread_rng().sample_iter(&Alphanumeric)
-                .take(n)
-                .collect()
+    thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(n)
+        .map(|byte| byte as char)
+        .collect()
 }
 
 use criterion::BenchmarkId;
